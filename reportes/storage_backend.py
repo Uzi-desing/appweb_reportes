@@ -9,7 +9,7 @@ load_dotenv()
 
 class AzureMediaStorage(AzureStorage):
     connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-    container_name = os.getenv("AZURE_CONTAINER_NAME")
+    azure_container = os.getenv("AZURE_CONTAINER_NAME")
 
     expiration_secs = None 
 
