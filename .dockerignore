@@ -5,3 +5,5 @@ tests/
 test/
 docs/
 *.log
+postgres_data/
+media/

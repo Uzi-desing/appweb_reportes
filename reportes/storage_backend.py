@@ -1,4 +1,4 @@
-from storage.backends.storages import AzureStorage
+from storages.backends.azure_storage import AzureStorage
 from dotenv import load_dotenv
 import os
 
