@@ -4,7 +4,10 @@ from django.contrib.auth import login, logout
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
-from .forms import FlexibleLoginForm
+from django.db import transaction
+from django.contrib import messages
+from .models import UsuarioTransportista
+from .forms import FlexibleLoginForm, ReporteDanoForm
 
 # Create your views here.
 @never_cache
@@ -36,3 +39,53 @@ def home_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+
+@login_required(login_url='login')
+@require_http_methods(["GET", "POST"])
+def crear_reporte_view(request):
+    if request.method == 'POST':
+        # 1. Cargamos el formulario con los datos del POST
+        form = ReporteDanoForm(request.POST) 
+
+        if form.is_valid():
+            # 2. Obtenemos los datos ya validados y limpios
+            dni_limpio = form.cleaned_data['dniConductor']
+            patente_limpia = form.cleaned_data['patenteConductor']
+            nombre = form.cleaned_data['nombreConductor']
+            apellido = form.cleaned_data['apellidoConductor']
+            transporte = form.cleaned_data['transporte']
+
+            try:
+                with transaction.atomic(): # Guarda todo o nada
+                    # 3. Actualiza o crea al transportista basado en el DNI
+                    conductor, creado = UsuarioTransportista.objects.update_or_create(
+                        dni=dni_limpio,
+                        defaults={
+                            'nombre': nombre,
+                            'apellido': apellido,
+                            'transporte': transporte,
+                            'patente': patente_limpia
+                        }
+                    )
+
+                    # 4. Se crea el objeto ReporteDano pero sin guardar en la DB
+                    reporte = form.save(commit=False)
+                    reporte.transportista = conductor # Vinculamos al transportista y la patente al reporte
+                    reporte.patente_reporte = patente_limpia
+                    # 5. Guarda el reporte en la DB
+                    reporte.save() 
+                    messages.success(request, 'Reporte creado con éxito')
+
+                    return redirect ('home')
+            
+            except Exception as e:
+                messages.error(request, 'Error técnico al guardar.')
+                print(f"Error en crear_reporte: {e}")
+        else:
+            messages.error(request, "Por favor, corrija los errores indicados en rojo.")
+    else:
+        # Petición GET: Formulario Vacio
+        form = ReporteDanoForm()
+    
+    return render(request, 'crear_reporte.html', {'form': form})
