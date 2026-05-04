@@ -1,13 +1,12 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.forms import AuthenticationForm
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.contrib import messages
-from .models import UsuarioTransportista
-from .forms import FlexibleLoginForm, ReporteDanoForm
+from .models import UsuarioTransportista, ReporteDano
+from .forms import FlexibleLoginForm, ReporteDanoForm, PiezasFormSet
 
 # Create your views here.
 @never_cache
@@ -77,7 +76,7 @@ def crear_reporte_view(request):
                     reporte.save() 
                     messages.success(request, 'Reporte creado con éxito')
 
-                    return redirect ('home')
+                    return redirect ('agregar_piezas', reporte_id=reporte.id)
             
             except Exception as e:
                 messages.error(request, 'Error técnico al guardar.')
@@ -89,3 +88,30 @@ def crear_reporte_view(request):
         form = ReporteDanoForm()
     
     return render(request, 'crear_reporte.html', {'form': form})
+
+@login_required(login_url='login')
+@require_http_methods(["GET", "POST"])
+def agregar_piezas_rechazadas_view(request, reporte_id):
+    reporte = get_object_or_404(ReporteDano, id=reporte_id)
+
+    if request.method == 'POST':
+        formset = PiezasFormSet(request.POST, request.FILES, instance=reporte, prefix='piezas')
+        if formset.is_valid():
+           try:
+                with transaction.atomic():
+                    formset.save()
+                    messages.success(request, "Reporte finalizado y piezas guardadas con éxito.")
+                return redirect('home')
+           
+           except Exception as e:
+                messages.error(request, "Error al guardar el reporte. Por favor, reintente.")
+        else:
+            formset.extra = 0
+    else:
+        formset = PiezasFormSet(instance=reporte, prefix='piezas')
+
+    return render(request, 'agregar_piezas_rechazadas.html', {
+        'formset': formset,
+        'reporte': reporte
+    })
+    

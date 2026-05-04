@@ -1,0 +1,200 @@
+<!-- Cargar jQuery (Obligatorio) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<div id="js-error-handler" style="display:none; background: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
+
+<form method="POST" enctype="multipart/form-data" id="piezas-form" novalidate>
+    {% csrf_token %}
+    {{ formset.management_form }}
+
+    <h1>Remito Recepción: {{ reporte.remito_recepcion }}</h1>
+
+    <div id="formset-container">
+        {% for form in formset %}
+        <div class="form-row" style="border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 5px;">
+            <div style="display:none;">{{ form.id }}{{ form.DELETE }}</div>
+            
+            <div style="margin-bottom: 10px;">
+                {{ form.pieza.label_tag }}<br>{{ form.pieza }}
+            </div>
+            <div style="margin-bottom: 10px;">
+                {{ form.categoria_dano.label_tag }}<br>{{ form.categoria_dano }}
+            </div>
+            <div style="margin-bottom: 10px;">
+                {{ form.cantidad.label_tag }}<br>{{ form.cantidad }}
+            </div>
+            <div style="margin-bottom: 10px;">
+                {{ form.observaciones.label_tag }}<br>{{ form.observaciones }}
+            </div>
+            <div style="margin-bottom: 10px;">
+                {{ form.imagen.label_tag }}<br>{{ form.imagen }}
+            </div>
+            
+            <button type="button" class="remove-row" style="color: red; cursor: pointer;">Eliminar esta pieza</button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <button type="button" id="add-form-row" style="margin-bottom: 20px;">✚ Añadir otra pieza</button>
+    <br>
+    <button type="submit" style="background: green; color: white; padding: 10px 20px;">Finalizar Reporte</button>
+</form>
+
+<!-- Molde vacío para nuevas filas -->
+<template id="empty-form-template">
+    <div class="form-row" style="border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 5px;">
+        <div style="display:none;">{{ formset.empty_form.id }}{{ formset.empty_form.DELETE }}</div>
+        
+        <div style="margin-bottom: 10px;">{{ formset.empty_form.pieza.label_tag }}<br>{{ formset.empty_form.pieza }}</div>
+        <div style="margin-bottom: 10px;">{{ formset.empty_form.categoria_dano.label_tag }}<br>{{ formset.empty_form.categoria_dano }}</div>
+        <div style="margin-bottom: 10px;">{{ formset.empty_form.cantidad.label_tag }}<br>{{ formset.empty_form.cantidad }}</div>
+        <div style="margin-bottom: 10px;">{{ formset.empty_form.observaciones.label_tag }}<br>{{ formset.empty_form.observaciones }}</div>
+        <div style="margin-bottom: 10px;">{{ formset.empty_form.imagen.label_tag }}<br>{{ formset.empty_form.imagen }}</div>
+        
+        <button type="button" class="remove-row" style="color: red; cursor: pointer;">Eliminar esta pieza</button>
+    </div>
+</template>
+
+<script>
+$(document).ready(function() {
+    const $form = $('#piezas-form');
+    const $managementForm = $('#id_piezas-TOTAL_FORMS');
+    const $container = $('#formset-container');
+    const template = $('#empty-form-template').html();
+
+    // --- 1. FUNCIÓN PARA COMPRESIÓN LIVIANA DE IMÁGENES EN EL FRONTEND ---
+    const MAX_WIDTH = 1920;
+    const MAX_HEIGHT = 1920;
+    const IMAGE_QUALITY = 0.95;
+
+    $container.on('change', 'input[type="file"]', function(event) {
+        const fileInput = event.target;
+        const file = fileInput.files[0];
+
+        if (!file || !file.type.match(/image.*/)) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height = Math.round(height *= MAX_WIDTH / width);
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width = Math.round(width *= MAX_HEIGHT / height);
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob(function(blob) {
+                    const compressedFile = new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+
+                    // Reemplazamos el archivo original por el comprimido
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(compressedFile);
+                    fileInput.files = dataTransfer.files;
+                }, 'image/jpeg', IMAGE_QUALITY);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // --- 2. FUNCIÓN PARA AÑADIR FILA ---
+    $('#add-form-row').on('click', function(e) {
+        e.preventDefault();
+        let total = parseInt($managementForm.val());
+        let newRow = template.replace(/__prefix__/g, total);
+        $container.append(newRow);
+        $managementForm.val(total + 1);
+    });
+
+    // --- 3. FUNCIÓN PARA ELIMINAR FILA ---
+    $container.on('click', '.remove-row', function(e) {
+        e.preventDefault();
+        const $row = $(this).closest('.form-row');
+        const $idInput = $row.find('input[name$="-id"]');
+
+        if ($idInput.val()) {
+            $row.find('input[name$="-DELETE"]').prop('checked', true);
+            $row.hide().addClass('hidden');
+        } else {
+            $row.remove();
+            reindexRows();
+        }
+    });
+
+    function reindexRows() {
+        const $rows = $('.form-row:not(.hidden)');
+        $rows.each(function(index) {
+            $(this).find('input, select, textarea').each(function() {
+                let name = $(this).attr('name');
+                if (name) $(this).attr('name', name.replace(/-(\d+)-|-(__prefix__)-/, `-${index}-`));
+                let id = $(this).attr('id');
+                if (id) $(this).attr('id', id.replace(/-(\d+)-|-(__prefix__)-/, `-${index}-`));
+            });
+        });
+        $managementForm.val($('.form-row').length);
+    }
+
+    // --- 4. VALIDACIÓN PERSONALIZADA PRE-ENVÍO PARA EVITAR QUE LA PÁGINA SE RECARGE ---
+    $form.on('submit', function(e) {
+        let isInvalid = false;
+        const $visibleRows = $('.form-row:not(.hidden)');
+
+        // Limpiar textos de error anteriores
+        $('.texto-error-js').remove();
+
+        // Validar que haya al menos 1 formulario visible
+        if ($visibleRows.length === 0) {
+            e.preventDefault();
+            $('#js-error-handler').html("⚠️ Debe registrar al menos una pieza.").fadeIn();
+            return false;
+        }
+
+        // Revisar cada formulario individualmente
+        $visibleRows.each(function() {
+            const camposAValidar = ['pieza', 'categoria_dano', 'cantidad', 'imagen'];
+
+            camposAValidar.forEach(campo => {
+                const $input = $(this).find(`[name$="-${campo}"]`);
+                const val = $input.val();
+                
+                const yaTieneImagen = campo === 'imagen' && $(this).find('a').length > 0;
+
+                if (!val && !yaTieneImagen) {
+                    isInvalid = true;
+                    const msjError = $input.attr('data-error-msg') || 'Campo faltante.';
+                    $input.after(`<small class="texto-error-js" style="color: #d9534f; display: block; margin-top: 5px;">${msjError}</small>`);
+                }
+            });
+        });
+
+        // Bloquear envío si falta algo
+        if (isInvalid) {
+            e.preventDefault();
+            $('#js-error-handler').html("⚠️ Faltan datos. Revise los mensajes debajo de las casillas vacías.").fadeIn();
+            $('html, body').animate({ scrollTop: 0 }, 'fast');
+            return false;
+        }
+
+        // Si es válido, ocultamos alertas y dejamos que Django procese
+        $('#js-error-handler').hide();
+    });
+});
+</script>

@@ -6,6 +6,5 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('home/', views.home_view, name='home'),
     path('reporte/nuevo/', views.crear_reporte_view, name='crear_reporte'),
-
-
+    path('reporte/<int:reporte_id>/piezas/', views.agregar_piezas_rechazadas_view, name='agregar_piezas'),
 ]

@@ -1,7 +1,8 @@
 from django import forms
+from django.forms import inlineformset_factory
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
-from .models import ReporteDano, UsuarioTransportista
+from .models import ReporteDano, UsuarioTransportista, PiezaRechazada, Pieza, CategoriaDano
 
 class FlexibleLoginForm(AuthenticationForm):
     def __init__(self, request = ..., *args, **kwargs):
@@ -61,7 +62,6 @@ class ReporteDanoForm(forms.ModelForm):
             'cliente': forms.Select(attrs={'class': 'form-control'}),
         }
 
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -103,3 +103,70 @@ class ReporteDanoForm(forms.ModelForm):
     
     def clean_apellidoConductor(self):
         return self.cleaned_data.get('apellidoConductor', '').strip().lower()
+    
+class PiezaRechazadaForm(forms.ModelForm):
+    pieza = forms.ModelChoiceField(
+        label="Pieza",
+        queryset=Pieza.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    categoria_dano = forms.ModelChoiceField(
+        label='Tipo de Daño',
+        queryset=CategoriaDano.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    cantidad = forms.IntegerField(
+        initial=1,
+        min_value=1,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'inputmode': 'numeric'})
+    )
+
+    observaciones = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
+    )
+
+    imagen = forms.ImageField(
+        widget=forms.ClearableFileInput(attrs={'capture': 'environment', 'accept': 'image/*'})
+    )
+
+    class Meta:
+        model = PiezaRechazada
+        fields = ['pieza', 'categoria_dano', 'cantidad', 'observaciones', 'imagen']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['pieza'].required=True
+        self.fields['categoria_dano'].required=True
+        self.fields['cantidad'].required=True
+        self.fields['imagen'].required=True
+
+        if self.instance.pk and self.instance.imagen:
+            self.fields['imagen'].required=False
+
+
+        mensajes = {
+            'pieza': 'Seleccione una pieza.',
+            'categoria_dano': 'Indique el tipo de daño.',
+            'cantidad': 'Ingrese una cantidad válida.',
+            'imagen': 'La foto de la pieza es obligatoria.'
+        }
+
+        for field_name, field in self.fields.items():
+            if field_name != 'observaciones':
+                field.required = True
+            if field_name in mensajes:
+                field.widget.attrs['data-error-msg'] = mensajes[field_name]
+
+PiezasFormSet = inlineformset_factory(
+    ReporteDano,
+    PiezaRechazada,
+    form=PiezaRechazadaForm,
+    extra=0,
+    min_num=1,
+    validate_min=True,
+    can_delete=True,
+)
