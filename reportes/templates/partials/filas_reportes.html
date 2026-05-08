@@ -1,6 +1,6 @@
 {% if reportes %}
     {% for reporte in reportes %}
-    <tr>
+    <tr data-url="{% url 'detalle_reporte' reporte.id %}">
         <td>{{ reporte.id }}</td>
         <td>{{ reporte.remito_recepcion }}</td>
         <td>{{ reporte.fecha|date:"d/m/Y" }}</td>

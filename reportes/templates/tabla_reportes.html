@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", function () {
             params.set('page', '1'); // Al filtrar, siempre se vuelve a la página 1.
             
             cargarDatosAJAX(params);
-        }, 300); // Espera 300ms despues que el usuario deje de escribir
+        }, 300); // Espera 300ms despues que el usuario deje de escribir.
     }
 
     // --- Listeners de Eventos para Filtros ---
@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // Delegación de eventos para la paginación
+    // Delegación de eventos para la paginación.
     tablaBody.addEventListener('click', function(e) {
         if (e.target.classList.contains('btn-pagina')) {
             e.preventDefault();
@@ -137,5 +137,26 @@ document.addEventListener("DOMContentLoaded", function () {
             cargarDatosAJAX(params);
         }
     });
+
+    // Funcionalidad para clic en filas (Redirección al detalle de un reporte especifico).
+    function rebindClickFilas() {
+        const filas = tablaBody.querySelectorAll("tr:not(.fila-paginacion)");
+        // Verificacion si la fila cuenta con la URL guardada en su data-url.
+        filas.forEach(fila => {
+            if (fila.dataset.url) {
+                fila.style.cursor = 'pointer';
+                fila.onclick = function(e) {
+                    // Protección: Si el clic se hace en un botón o enlace dentro de la fila, no se redirige.
+                    if (e.target.closest('button') || e.target.closest('a')) {
+                        return;
+                    }
+
+                    window.location.href = this.dataset.url;
+                };
+            }
+        });
+    }
+    
+    rebindClickFilas();
 });
 </script>
