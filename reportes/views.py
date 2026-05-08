@@ -5,7 +5,9 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.contrib import messages
-from .models import UsuarioTransportista, ReporteDano
+from django.db.models import Q
+from django.core.paginator import Paginator
+from .models import UsuarioTransportista, ReporteDano, Empleado
 from .forms import FlexibleLoginForm, ReporteDanoForm, PiezasFormSet
 
 # Create your views here.
@@ -114,4 +116,56 @@ def agregar_piezas_rechazadas_view(request, reporte_id):
         'formset': formset,
         'reporte': reporte
     })
+
+@login_required(login_url='login')
+@require_http_methods(['GET'])
+def tabla_reportes_view(request):
+    # 1. Obtenemos los datos que necesitamos.
+    reportes = ReporteDano.objects.select_related('empleado', 'cliente')
+    empleados = Empleado.objects.all().order_by('apellido')
+
+    # 2. Capturamos los parametros que necesitamos para filtrar.
+    q = request.GET.get('q', '').strip()
+    empleado_id = request.GET.get('empleado', '')
+    desde = request.GET.get('desde', '')
+    hasta = request.GET.get('hasta', '')
+
+    # 3. Aplicación de los filtros.
+    if q:
+        reportes = reportes.filter(
+            Q(id__icontains=q) |
+            Q(remito_recepcion__icontains=q) |
+            Q(cliente__nombre__icontains=q)
+        )
+    
+    if empleado_id:
+        reportes = reportes.filter(empleado_id=empleado_id)
+
+    if desde:
+        reportes = reportes.filter(fecha__gte=desde)
+    if hasta:
+        reportes = reportes.filter(fecha__lte=hasta)
+
+    # Ordenamiento descendente y ascendente.
+    sort = request.GET.get('sort', 'id')
+    order = request.GET.get('order', 'desc')
+    if order == 'desc':
+        sort = f"-{sort}"
+    reportes = reportes.order_by(sort)
+
+    # Paginacion: Toma todos los reportes pero los envia en trozos de 15 por página.
+    paginator = Paginator(reportes, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'reportes': page_obj, 
+        'empleados': empleados, 
+        'empleado_seleccionado' : int(empleado_id) if empleado_id.isdigit() else None 
+    }
+
+    if request.GET.get('ajax') == 'true':
+        return render(request, 'partials/filas_reportes.html', context)
+
+    return render(request, 'tabla_reportes.html', context)
     

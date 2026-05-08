@@ -7,7 +7,7 @@
     {% csrf_token %}
     {{ formset.management_form }}
 
-    <h1>Remito Recepción: {{ reporte.remito_recepcion }}</h1>
+    <h4>Remito Recepción: {{ reporte.remito_recepcion }}</h4>
 
     <div id="formset-container">
         {% for form in formset %}
