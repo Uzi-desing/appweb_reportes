@@ -1,0 +1,70 @@
+<div class="contenedor-detalle" >
+    <div>
+        <h2>Reporte {{ reporte.id }} de Daños : {{ reporte.remito_recepcion }}</h2>
+        <span>
+            <strong>Fecha: {{ reporte.fecha|date:"d/m/Y" }}</strong>
+        </span>
+    </div>
+    <div>
+        <div>
+            <h4>Datos del Cliente:</h4>
+            <p><strong>Nombre:</strong> {{ reporte.cliente.nombre }}</p>
+            <p><strong>Domicilio:</strong> {{ reporte.cliente.domicilio }}</p>
+            <p><strong>Teléfono:</strong> {{ reporte.cliente.telefono }}</p>
+        </div>
+        <div>
+            <h4>Datos del Transportista:</h4>
+            <p><strong>Conductor:</strong> {{ reporte.transportista.nombre }} {{ reporte.transportista.apellido }}</p>
+            <p><strong>DNI:</strong> {{ reporte.transportista.dni }}</p>
+            <p><strong>Vehiculo:</strong> {{ reporte.transportista.get_transporte_display }}</p>
+            <p><strong>Patente Reportada:</strong> <span>{{ reporte.patente_reporte }}</span></p>
+        </div>
+
+        <h3>Piezas dañadas reportadas:</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Pieza</th>
+                    <th>tipo de daño</th>
+                    <th>cantidad</th>
+                    <th>observaciones</th>
+                    <th>Imagen de la pieza</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rechazo in reporte.piezas_rechazadas.all %}
+                <tr>
+                    <td>{{ rechazo.pieza.categoria.descripcion }} {{ rechazo.pieza.medidas }}</td>
+                    <td>{{ rechazo.categoria_dano.motivo }}</td>
+                    <td>{{ rechazo.cantidad }}</td>
+                    <td>{{ rechazo.observaciones|default:"Sin observaciones particulares." }}</td>
+                    <td>
+                        {% if rechazo.url_segura %}
+                            <a href="{{ rechazo.url_segura }}" target="_blank" title="Ver foto en pantalla completa">
+                                <img src="{{ rechazo.url_segura }}" alt="Evidencia daño">
+                            </a>
+                        {% else %}
+                            <span>Sin fotos</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td>
+                        No hay piezas registradas en este reporte.
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div>
+        <a href="{% url 'tabla_reportes' %}">Volver al Historial</a>
+        <button onclick="window.print()">Imprimir Reporte</button>
+    </div>
+
+
+
+</div>

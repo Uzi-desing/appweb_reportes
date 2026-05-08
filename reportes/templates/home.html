@@ -11,12 +11,10 @@
     <p>Has iniciado sesión correctamente y estás en la página principal.</p>
 
     <form method="get" action="{% url 'crear_reporte' %}">
-        {% csrf_token %}
         <button type="submit">Crear nuevo reporte</button>
     </form>
 
     <form method="get" action="{% url 'tabla_reportes' %}">
-        {% csrf_token %}
         <button type="submit">Ver reportes</button>
     </form>
 

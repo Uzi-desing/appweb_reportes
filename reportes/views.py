@@ -169,3 +169,13 @@ def tabla_reportes_view(request):
 
     return render(request, 'tabla_reportes.html', context)
     
+@login_required(login_url='login')
+@require_http_methods(['GET'])
+def detalle_reporte_view(request, reporte_id):
+    reporte = get_object_or_404(ReporteDano.objects.select_related('empleado', 'cliente', 'transportista').prefetch_related(
+        'piezas_rechazadas__pieza__categoria',
+        'piezas_rechazadas__categoria_dano'
+    ),id=reporte_id)
+
+    return render(request, 'detalle_reporte.html', {'reporte': reporte})
+
