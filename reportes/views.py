@@ -3,12 +3,12 @@ from django.contrib.auth import login, logout
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
-from .models import UsuarioTransportista, ReporteDano, Empleado
-from .forms import FlexibleLoginForm, ReporteDanoForm, PiezasFormSet
+from .models import UsuarioTransportista, ReporteDano, Empleado, Cliente
+from .forms import FlexibleLoginForm, ReporteDanoForm, PiezasFormSet, ClienteForm
 
 # Create your views here.
 @never_cache
@@ -178,4 +178,50 @@ def detalle_reporte_view(request, reporte_id):
     ),id=reporte_id)
 
     return render(request, 'detalle_reporte.html', {'reporte': reporte})
+
+@login_required(login_url='login')
+@require_http_methods(['GET', 'POST'])
+def registrar_cliente_view(request):
+    if request.method == 'POST':
+        form = ClienteForm(request.POST)
+        if form.is_valid():
+            try:
+                nuevo_cliente = form.save()
+                messages.success(request, f"Cliente {nuevo_cliente.nombre} registrado exitosamente.")
+                return redirect('home')
+            except IntegrityError:
+                messages.error(request, "Error interno: Ya existe un registro con esos datos únicos.")
+            except Exception as e:
+                messages.error(request, "Ocurrió un error inesperado al intentar guardar el cliente. Intente nuevamente.")
+        else:
+            messages.error(request, "Error al registrar. Por favor, revise los datos ingresados.")
+    else:
+        form = ClienteForm()
+    return render(request, 'registrar_cliente.html', {'form': form})
+
+@login_required(login_url='login')
+@require_http_methods(['GET'])
+def tabla_clientes_view(request):
+    clientes = Cliente.objects.all()
+
+    q = request.GET.get('q', '').strip()
+    if q: 
+        clientes = clientes.filter(
+            Q(nombre__icontains=q)
+        )
+
+    sort = request.GET.get('sort', 'nombre')
+    order = request.GET.get('orden', 'asc')
+    if order == 'desc':
+        sort = f"-{sort}"
+    clientes = clientes.order_by(sort)
+
+    paginator = Paginator(clientes, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    if request.GET.get('ajax') == 'true':
+        return render(request, 'partials/filas_clientes.html', {'clientes': page_obj})
+    
+    return render(request, 'tabla_clientes.html', {'clientes': page_obj})
 

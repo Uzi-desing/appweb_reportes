@@ -1,0 +1,51 @@
+<div>
+    <h2>Registrar un Nuevo Cliente</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+            <div>
+                <label>
+                    {{ field.label }}
+                </label>
+
+                {{ field }}
+            </div>
+
+            {% if field.errors %}
+                <ul>
+                    {% for error in field.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endfor %}
+
+        <div>
+            <button type="submit">
+                Registrar Cliente
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const inputTelefono = document.getElementById("id_telefono");
+
+    if (inputTelefono) {
+        inputTelefono.addEventListener("input", function(e) {
+            this.value = this.value.replace(/\D/g, '');
+
+        });
+    }
+});
+</script>

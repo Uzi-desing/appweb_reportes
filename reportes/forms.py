@@ -2,7 +2,7 @@ from django import forms
 from django.forms import inlineformset_factory
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
-from .models import ReporteDano, UsuarioTransportista, PiezaRechazada, Pieza, CategoriaDano
+from .models import ReporteDano, UsuarioTransportista, PiezaRechazada, Pieza, CategoriaDano, Cliente
 
 class FlexibleLoginForm(AuthenticationForm):
     def __init__(self, request = ..., *args, **kwargs):
@@ -170,3 +170,66 @@ PiezasFormSet = inlineformset_factory(
     validate_min=True,
     can_delete=True,
 )
+
+class ClienteForm(forms.ModelForm):
+    nombre = forms.CharField(
+        label='Razon Social',
+        error_messages={
+            'required': 'La razón social es obligatoria.'
+        },
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: ECVA SRL'})
+    )
+
+    mail = forms.EmailField(
+        label='Correo Electrónico',
+        error_messages={
+            'required': 'El correo electrónico es obligatorio.',
+            'invalid': 'Por favor, ingrese una dirección de correo válida.',
+            'unique': 'Este correo ya se encuentra registrado.'
+        },
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'ejemplo@correo.com'})
+    )
+
+    domicilio = forms.CharField(
+        label='Domicilio',
+        error_messages={
+            'required': 'El domicilio es obligatorio.'
+        },
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Dr. Teodoro Planas 1245'})
+    )
+
+    telefono = forms.CharField(
+        label='Teléfono / Celular',
+        max_length=11,
+        min_length=10,
+        error_messages={
+            'required': 'El número de teléfono es obligatorio.',
+            'min_length': 'El teléfono debe tener al menos 10 dígitos.',
+            'max_length': 'El teléfono no puede superar los 11 dígitos.'
+        },
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Ej: 299155XXXX',
+            'inputmode': 'numeric',
+            'pattern': '[0-9]{10,11}',
+            'class': 'form-control'
+        }))
+    
+    class Meta:
+        model = Cliente
+        fields = ['nombre', 'telefono', 'mail', 'domicilio']
+
+    def clean_nombre(self):
+        return self.cleaned_data.get('nombre', '').strip().lower()
+    
+    def clean_domicilio(self):
+        return self.cleaned_data.get('domicilio', '').strip().lower()
+    
+    def clean_telefono(self):
+        telefono = self.cleaned_data.get('telefono', '').strip()
+        if not telefono.isdigit():
+            raise forms.ValidationError("El teléfono solo debe contener números, sin espacios ni guiones.")
+        return telefono
+        
+    
+    
+    

@@ -9,4 +9,6 @@ urlpatterns = [
     path('reporte/<int:reporte_id>/piezas/', views.agregar_piezas_rechazadas_view, name='agregar_piezas'),
     path('reportes/', views.tabla_reportes_view, name='tabla_reportes'),
     path('reporte/<int:reporte_id>/detalle/', views.detalle_reporte_view, name='detalle_reporte'),
+    path('clientes/nuevo/', views.registrar_cliente_view, name='registrar_cliente'),
+    path('clientes/', views.tabla_clientes_view, name='tabla_clientes')
 ]
