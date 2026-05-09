@@ -7,7 +7,7 @@ from django.db import transaction, IntegrityError
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
-from .models import UsuarioTransportista, ReporteDano, Empleado, Cliente
+from .models import UsuarioTransportista, ReporteDano, Empleado, Cliente, Rol
 from .forms import FlexibleLoginForm, ReporteDanoForm, PiezasFormSet, ClienteForm
 
 # Create your views here.
@@ -225,3 +225,35 @@ def tabla_clientes_view(request):
     
     return render(request, 'tabla_clientes.html', {'clientes': page_obj})
 
+@login_required(login_url='login')
+@require_http_methods(['GET'])
+def tabla_empleados_view(request):
+    empleados = Empleado.objects.select_related('rol').all()
+    roles = Rol.objects.all()
+
+    q = request.GET.get('q', '').strip()
+    if q:
+        empleados = empleados.filter(
+            Q(nombre__icontains=q) |
+            Q(apellido__icontains=q) |
+            Q(dni__icontains=q)
+        )
+    
+    rol_id = request.GET.get('rol', '')
+    if rol_id:
+        empleados = empleados.filter(rol_id=rol_id)
+
+    sort = request.GET.get('sort', 'nombre')
+    order = request.GET.get('order', 'asc')
+    if order == 'desc':
+        sort = f"-{sort}"
+    empleados = empleados.order_by(sort)
+
+    paginator = Paginator(empleados, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    if request.GET.get('ajax') == 'true':
+        return render(request, 'partials/filas_empleados.html', {'empleados': page_obj})
+    
+    return render(request, 'tabla_empleados.html', {'empleados': page_obj, 'roles': roles})
