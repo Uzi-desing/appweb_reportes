@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
 from django.contrib.auth import login, logout
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
@@ -7,7 +8,8 @@ from django.db import transaction, IntegrityError
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
-from .models import UsuarioTransportista, ReporteDano, Empleado, Cliente, Rol
+from .utils.utils_pdf import GeneradorReportePDF
+from .models import UsuarioTransportista, ReporteDano, Empleado, Cliente, Rol, PiezaRechazada
 from .forms import FlexibleLoginForm, ReporteDanoForm, PiezasFormSet, ClienteForm
 
 # Create your views here.
@@ -257,3 +259,25 @@ def tabla_empleados_view(request):
         return render(request, 'partials/filas_empleados.html', {'empleados': page_obj})
     
     return render(request, 'tabla_empleados.html', {'empleados': page_obj, 'roles': roles})
+
+@login_required(login_url='login')
+@require_http_methods(['GET'])
+def generar_reporte_pdf_view(request, reporte_id):
+    reporte = get_object_or_404(ReporteDano.objects.select_related('cliente', 'empleado', 'transportista').prefetch_related(
+        'piezas_rechazadas__pieza__categoria',
+        'piezas_rechazadas__categoria_dano'
+    ), id=reporte_id)
+
+    try:
+        generador = GeneradorReportePDF(reporte)
+        pdf_bytes = generador.generar()
+
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="Reporte_{reporte.id}_{reporte.cliente.nombre}.pdf"'
+
+        return response
+    
+    except Exception as e:
+        print(f"Error generando PDF {reporte_id}: {e}")
+        messages.error(request, "Ocurrió un error al generar el documento PDF.")
+        return redirect('deta')

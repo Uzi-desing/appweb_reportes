@@ -1,4 +1,7 @@
 <div class="contenedor-detalle" >
+    <form method="get" action="{% url 'generar_reporte_pdf' reporte.id %}">
+        <button type="submit">Generar PDF</button>
+    </form>
     <div>
         <h2>Reporte {{ reporte.id }} de Daños : {{ reporte.remito_recepcion }}</h2>
         <span>

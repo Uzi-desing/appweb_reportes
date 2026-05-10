@@ -12,5 +12,6 @@ urlpatterns = [
     path('clientes/nuevo/', views.registrar_cliente_view, name='registrar_cliente'),
     path('clientes/', views.tabla_clientes_view, name='tabla_clientes'),
     path('empleados/', views.tabla_empleados_view, name='tabla_empleados'),
+    path('reporte/<int:reporte_id>/generar/', views.generar_reporte_pdf_view, name='generar_reporte_pdf'),
 
 ]
