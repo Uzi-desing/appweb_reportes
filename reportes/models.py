@@ -80,6 +80,7 @@ class ReporteDano(models.Model):
     remito_recepcion = models.CharField(max_length=255, unique=True, editable=False)
     fecha = models.DateField(auto_now_add=True)
     patente_reporte = models.CharField(max_length=20)
+    finalizado = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if not self.remito_recepcion:

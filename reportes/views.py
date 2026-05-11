@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
 from .utils.utils_pdf import GeneradorReportePDF
+from django_q.tasks import async_task
 from .models import UsuarioTransportista, ReporteDano, Empleado, Cliente, Rol, PiezaRechazada
 from .forms import FlexibleLoginForm, ReporteDanoForm, PiezasFormSet, ClienteForm
 
@@ -43,7 +44,6 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
-
 @login_required(login_url='login')
 @require_http_methods(["GET", "POST"])
 def crear_reporte_view(request):
@@ -76,6 +76,7 @@ def crear_reporte_view(request):
                     reporte = form.save(commit=False)
                     reporte.transportista = conductor # Vinculamos al transportista y la patente al reporte
                     reporte.patente_reporte = patente_limpia
+                    reporte.finalizado = False
                     # 5. Guarda el reporte en la DB
                     reporte.save() 
                     messages.success(request, 'Reporte creado con éxito')
@@ -93,19 +94,30 @@ def crear_reporte_view(request):
     
     return render(request, 'crear_reporte.html', {'form': form})
 
+@never_cache
 @login_required(login_url='login')
 @require_http_methods(["GET", "POST"])
 def agregar_piezas_rechazadas_view(request, reporte_id):
     reporte = get_object_or_404(ReporteDano, id=reporte_id)
+
+    if reporte.finalizado:
+        messages.warning(request, "Este reporte ya fue finalizado y no puede ser modificado.")
+        return redirect('detalle_reporte', reporte_id=reporte.id)
 
     if request.method == 'POST':
         formset = PiezasFormSet(request.POST, request.FILES, instance=reporte, prefix='piezas')
         if formset.is_valid():
            try:
                 with transaction.atomic():
+                    # Guardado Sincronico
                     formset.save()
-                    messages.success(request, "Reporte finalizado y piezas guardadas con éxito.")
-                return redirect('home')
+                    reporte.finalizado = True
+                    reporte.save()
+                    # Delegación Asíncronica
+                    ruta_funcion = 'reportes.utils.utils_mail.enviar_reporte_cliente'
+                    async_task(ruta_funcion, reporte.id)
+                    messages.success(request, f"Reporte finalizado. En unos momentos se enviará el PDF al correo {reporte.cliente.mail}.")
+                return redirect('detalle_reporte', reporte_id=reporte.id)
            
            except Exception as e:
                 messages.error(request, "Error al guardar el reporte. Por favor, reintente.")
