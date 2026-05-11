@@ -1,0 +1,44 @@
+<form method="POST" novalidate>
+    {% csrf_token %}
+    
+    {% for field in form %}
+        <div class="form-group">
+            <label>{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+                <div class="text-danger">
+                    {{ field.errors|first }} 
+                </div>
+            {% endif %}
+        </div>
+    {% endfor %}
+
+    <button type="submit">Siguiente: Registrar Piezas</button>
+</form>
+
+<script>
+// --- 1. FUNCIÓN PARA EL CAMPO "DNI"
+document.addEventListener('DOMContentLoaded', function() {
+    // Buscamos el campo por su ID 
+    const dniInput = document.getElementById('id_dniConductor');
+
+    if (dniInput) {
+        dniInput.addEventListener('input', function(e) {
+            // 1. Removemos todo lo que no sea un número
+            let value = e.target.value.replace(/\D/g, '');
+            
+            // 2. Limitamos a 8 dígitos máximo
+            if (value.length > 8) {
+                value = value.slice(0, 8);
+            }
+
+            // 3. Aplicamos el formato con puntos (Regex para miles)
+            // Esto transforma 22312341 en 22.312.341
+            let formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+            // 4. Devolvemos el valor formateado al input
+            e.target.value = formattedValue;
+        });
+    }
+});
+</script>

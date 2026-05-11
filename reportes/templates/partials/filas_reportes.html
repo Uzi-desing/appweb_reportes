@@ -1,0 +1,31 @@
+{% if reportes %}
+    {% for reporte in reportes %}
+    <tr data-url="{% url 'detalle_reporte' reporte.id %}">
+        <td>{{ reporte.id }}</td>
+        <td>{{ reporte.remito_recepcion }}</td>
+        <td>{{ reporte.fecha|date:"d/m/Y" }}</td>
+        <td>{{ reporte.cliente.nombre }}</td>
+        <td>{{ reporte.empleado.nombre }} {{ reporte.empleado.apellido }}</td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="4" style="text-align: center;">No se encontraron reportes.</td>
+    </tr>
+{% endif %}
+
+{% if reportes.has_other_pages %}
+<tr>
+    <td>
+        {% if reportes.has_previous %}
+            <a href="?page={{ reportes.previous_page_number }}" class="btn-pagina">Anterior</a>
+        {% endif %}
+
+        <span>Página {{ reportes.number }} de {{ reportes.paginator.num_pages }}</span>
+
+        {% if reportes.has_next %}
+            <a href="?page={{ reportes.next_page_number }}" class="btn-pagina">Siguiente</a>
+        {% endif %}
+    </td>
+</tr>
+{% endif %}

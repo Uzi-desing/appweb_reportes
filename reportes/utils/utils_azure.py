@@ -6,7 +6,7 @@ import os
 load_dotenv()
 
 # Genera una URL segura y temporal para visualizar un archivo privado en Azure Blob Storage
-def generate_url_sas(blob_name, expira_en_min=30):
+def generate_url_sas(blob_name, expira_en_min=15):
     try:
         # Lee las credenciales para firmar el Token SAS
         account_name = os.getenv('AZURE_ACCOUNT_NAME')

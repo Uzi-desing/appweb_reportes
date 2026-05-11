@@ -28,7 +28,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*',]
 
 
 # Application definition
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'reportes',
+    'django_q',
 ]
 
 MIDDLEWARE = [
@@ -123,3 +124,25 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# --- Configuración para mandar los reportes por correo ---
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = os.getenv('EMAIL_PORT')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
+# --- Panel de Control para las tareas en segundo plano ---
+Q_CLUSTER = {
+    'name': 'ecva_cluster',
+    'workers': 4,   # Cantidad de Procesos simultáneos que pueden ejecutarse. 
+    'recycle': 500, # Libera memoria ram despues de 500 tareas.
+    'timeout': 60,  # Limite de tiempo, si la tarea tarda mas de 60 seg, cancela la tarea.
+    'compress': True,   # Comprime los datos de la tarea en la DB para ahorrar espacio.
+    'save_limit': 250,  # Solo guarda el historial de las ultimas 250 tareas. 
+    'queue_limit': 500, # Límite de tareas en la sala de espera de la memoria RAM.
+    'cpu_affinity': 1,  # Optimización a nivel de procesador.
+    'label': 'Tareas en Segundo Plano',
+    'orm': 'default'    # Le dice a Django-Q que use la DB para guardar la cola de tareas.
+}

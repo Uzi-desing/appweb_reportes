@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Página Principal</title>
+</head>
+<body>
+
+    <h2>¡Bienvenido, {{ user.username }}!</h2>
+    
+    <p>Has iniciado sesión correctamente y estás en la página principal.</p>
+
+    <form method="get" action="{% url 'crear_reporte' %}">
+        <button type="submit">Crear nuevo reporte</button>
+    </form>
+
+    <form method="get" action="{% url 'tabla_reportes' %}">
+        <button type="submit">Ver reportes</button>
+    </form>
+
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Cerrar Sesión</button>
+    </form>
+
+</body>
+</html>

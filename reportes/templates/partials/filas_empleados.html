@@ -1,0 +1,31 @@
+{% if empleados %}
+    {% for empleado in empleados %}
+    <tr>
+        <td>{{ empleado.nombre | title }} {{ empleado.apellido | title }}</td>
+        <td>{{ empleado.dni }}</td>
+        <td>{{ empleado.rol.puesto }}</td>
+        <td>{{ empleado.telefono }}</td>
+        <td>{{ empleado.mail }}</td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td>No se encontraron empleados registrados.</td>
+    </tr>
+{% endif %}
+
+{% if empleados.has_other_pages %}
+<tr class="fila-paginacion">
+    <td>
+        {% if empleados.has_previous %}
+            <a href="?page={{ empleados.previous_page_number }}" class="btn-pagina">Anterior</a>
+        {% endif %}
+
+        <span style="margin: 0 10px;">Página {{ empleados.number }} de {{ empleados.paginator.num_pages }}</span>
+
+        {% if empleados.has_next %}
+            <a href="?page={{ empleados.next_page_number }}" class="btn-pagina">Siguiente</a>
+        {% endif %}
+    </td>
+</tr>
+{% endif %}
