@@ -10,10 +10,9 @@ services:
     ports:
       - "5432:5432"
 
-  
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: python manage.py qcluster & python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
@@ -23,6 +22,27 @@ services:
     depends_on:
       - db
     restart: on-failure
+
+  qcluster:
+    build: .
+    command: python manage.py qcluster
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - web
+
+  tailwind:
+    image: node:20-alpine
+    container_name: appweb_tailwind
+    working_dir: /app
+    restart: unless-stopped
+    volumes:
+      - .:/app
+
+    command: sh -c "npm install && npx tailwindcss -i ./reportes/static/src/input.css -o ./reportes/static/dist/css/output.css --watch"
 
 volumes:
   postgres_data:

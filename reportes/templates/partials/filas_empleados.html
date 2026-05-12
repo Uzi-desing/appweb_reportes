@@ -1,31 +1,39 @@
 {% if empleados %}
     {% for empleado in empleados %}
-    <tr>
-        <td>{{ empleado.nombre | title }} {{ empleado.apellido | title }}</td>
-        <td>{{ empleado.dni }}</td>
-        <td>{{ empleado.rol.puesto }}</td>
-        <td>{{ empleado.telefono }}</td>
-        <td>{{ empleado.mail }}</td>
+    <tr class="border-b border-black/5 hover:bg-black/5 transition-colors">
+        <td class="px-3 py-3 text-sm font-medium text-black">{{ empleado.nombre | title }} {{ empleado.apellido | title }}</td>
+        <td class="px-3 py-3 text-sm text-black/70">{{ empleado.dni }}</td>
+        <td class="px-3 py-3 text-sm text-black">{{ empleado.rol.puesto }}</td>
+        <td class="px-3 py-3 text-sm text-black/70">{{ empleado.telefono }}</td>
+        <td class="px-3 py-3 text-sm text-black">{{ empleado.mail }}</td>
     </tr>
     {% endfor %}
 {% else %}
     <tr>
-        <td>No se encontraron empleados registrados.</td>
+        <td colspan="5" class="px-3 py-8 text-center text-black/50">No se encontraron empleados registrados.</td>
     </tr>
 {% endif %}
 
 {% if empleados.has_other_pages %}
 <tr class="fila-paginacion">
-    <td>
-        {% if empleados.has_previous %}
-            <a href="?page={{ empleados.previous_page_number }}" class="btn-pagina">Anterior</a>
-        {% endif %}
-
-        <span style="margin: 0 10px;">Página {{ empleados.number }} de {{ empleados.paginator.num_pages }}</span>
-
-        {% if empleados.has_next %}
-            <a href="?page={{ empleados.next_page_number }}" class="btn-pagina">Siguiente</a>
-        {% endif %}
+    <td colspan="5" class="px-3 py-4">
+        <div class="flex items-center justify-between">
+            <div class="text-sm text-black/50">
+                {% if empleados.has_previous %}
+                    <a href="?page={{ empleados.previous_page_number }}" class="btn-pagina inline-flex items-center rounded-md border border-black px-3 py-1.5 text-sm font-medium text-black hover:bg-brand hover:border-brand hover:text-white transition-colors">
+                        Anterior
+                    </a>
+                {% endif %}
+            </div>
+            <span class="text-sm text-black/60">Página {{ empleados.number }} de {{ empleados.paginator.num_pages }}</span>
+            <div class="text-sm text-black/50">
+                {% if empleados.has_next %}
+                    <a href="?page={{ empleados.next_page_number }}" class="btn-pagina inline-flex items-center rounded-md border border-black px-3 py-1.5 text-sm font-medium text-black hover:bg-brand hover:border-brand hover:text-white transition-colors">
+                        Siguiente
+                    </a>
+                {% endif %}
+            </div>
+        </div>
     </td>
 </tr>
 {% endif %}

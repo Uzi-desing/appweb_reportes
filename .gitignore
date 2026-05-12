@@ -10,5 +10,6 @@ media/
 .coverage
 htmlcov/
 postgres_data/
+node_modules/
 
 

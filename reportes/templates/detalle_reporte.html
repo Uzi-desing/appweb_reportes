@@ -1,66 +1,88 @@
-<div class="contenedor-detalle" >
-    <form method="get" action="{% url 'generar_reporte_pdf' reporte.id %}">
-        <button type="submit">Generar PDF</button>
-    </form>
-    <div>
-        <h2>Reporte {{ reporte.id }} de Daños : {{ reporte.remito_recepcion }}</h2>
-        <span>
-            <strong>Fecha: {{ reporte.fecha|date:"d/m/Y" }}</strong>
-        </span>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ECVA - Detalle Reporte{% endblock %}
+
+{% block content %}
+<div class="w-full max-w-5xl mx-auto mt-8 px-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight text-black/90">
+                Reporte {{ reporte.id }}: {{ reporte.remito_recepcion }}
+            </h1>
+            <span class="text-sm text-black/50 mt-1 block">
+                <strong>Fecha:</strong> {{ reporte.fecha|date:"d/m/Y" }}
+            </span>
+        </div>
+        <form method="get" action="{% url 'generar_reporte_pdf' reporte.id %}">
+            <button type="submit" class="inline-flex items-center justify-center rounded-md border border-black px-4 py-2 text-sm font-medium text-black hover:bg-brand hover:border-brand hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Generar PDF
+            </button>
+        </form>
     </div>
-    <div>
-        <div>
-            <h4>Datos del Cliente:</h4>
-            <p><strong>Nombre:</strong> {{ reporte.cliente.nombre }}</p>
-            <p><strong>Domicilio:</strong> {{ reporte.cliente.domicilio }}</p>
-            <p><strong>Teléfono:</strong> {{ reporte.cliente.telefono }}</p>
+
+    <div class="p-6 rounded-lg border border-black/10 bg-white shadow-md">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="p-4 bg-gray-50 rounded-lg border border-black/10">
+                <h3 class="font-semibold text-black mb-3 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Datos del Cliente
+                </h3>
+                <p class="text-sm"><strong>Nombre:</strong> {{ reporte.cliente.nombre }}</p>
+                <p class="text-sm"><strong>Domicilio:</strong> {{ reporte.cliente.domicilio }}</p>
+                <p class="text-sm"><strong>Teléfono:</strong> {{ reporte.cliente.telefono }}</p>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-lg border border-black/10">
+                <h3 class="font-semibold text-black mb-3 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                    Datos del Transportista
+                </h3>
+                <p class="text-sm"><strong>Conductor:</strong> {{ reporte.transportista.nombre }} {{ reporte.transportista.apellido }}</p>
+                <p class="text-sm"><strong>DNI:</strong> {{ reporte.transportista.dni }}</p>
+                <p class="text-sm"><strong>Vehículo:</strong> {{ reporte.transportista.get_transporte_display }}</p>
+                <p class="text-sm"><strong>Patente:</strong> {{ reporte.patente_reporte }}</p>
+            </div>
         </div>
-        <div>
-            <h4>Datos del Transportista:</h4>
-            <p><strong>Conductor:</strong> {{ reporte.transportista.nombre }} {{ reporte.transportista.apellido }}</p>
-            <p><strong>DNI:</strong> {{ reporte.transportista.dni }}</p>
-            <p><strong>Vehiculo:</strong> {{ reporte.transportista.get_transporte_display }}</p>
-            <p><strong>Patente Reportada:</strong> <span>{{ reporte.patente_reporte }}</span></p>
+
+        <h3 class="text-lg font-semibold text-black mb-4 border-b border-black/10 pb-2">Piezas dañadas reportadas</h3>
+
+        <div class="overflow-x-auto -mx-4 sm:mx-0">
+            <table class="w-full text-sm text-left border-collapse min-w-[700px]">
+                <thead class="bg-black/5 text-black/70 uppercase text-xs">
+                    <tr>
+                        <th class="px-3 py-3 border-b border-black/10 font-bold">Pieza</th>
+                        <th class="px-3 py-3 border-b border-black/10 font-bold">Tipo de daño</th>
+                        <th class="px-3 py-3 border-b border-black/10 font-bold">Cantidad</th>
+                        <th class="px-3 py-3 border-b border-black/10 font-bold">Observaciones</th>
+                        <th class="px-3 py-3 border-b border-black/10 font-bold">Imagen</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-black/5">
+                    {% for rechazo in reporte.piezas_rechazadas.all %}
+                    <tr class="hover:bg-black/5 transition-colors">
+                        <td class="px-3 py-3 text-black">{{ rechazo.pieza.categoria.descripcion }} {{ rechazo.pieza.medidas }}</td>
+                        <td class="px-3 py-3 text-black/70">{{ rechazo.categoria_dano.motivo }}</td>
+                        <td class="px-3 py-3 text-black">{{ rechazo.cantidad }}</td>
+                        <td class="px-3 py-3 text-black/70">{{ rechazo.observaciones|default:"Sin observaciones." }}</td>
+                        <td class="px-3 py-3">
+                            {% if rechazo.url_segura %}
+                                <a href="{{ rechazo.url_segura }}" target="_blank" title="Ver foto">
+                                    <img src="{{ rechazo.url_segura }}" alt="Evidencia" class="h-12 w-auto rounded border border-black/10 hover:opacity-80 transition-opacity">
+                                </a>
+                            {% else %}
+                                <span class="text-black/40 text-xs">Sin fotos</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-3 py-8 text-center text-black/50">No hay piezas registradas en este reporte.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-
-        <h3>Piezas dañadas reportadas:</h3>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Pieza</th>
-                    <th>tipo de daño</th>
-                    <th>cantidad</th>
-                    <th>observaciones</th>
-                    <th>Imagen de la pieza</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for rechazo in reporte.piezas_rechazadas.all %}
-                <tr>
-                    <td>{{ rechazo.pieza.categoria.descripcion }} {{ rechazo.pieza.medidas }}</td>
-                    <td>{{ rechazo.categoria_dano.motivo }}</td>
-                    <td>{{ rechazo.cantidad }}</td>
-                    <td>{{ rechazo.observaciones|default:"Sin observaciones particulares." }}</td>
-                    <td>
-                        {% if rechazo.url_segura %}
-                            <a href="{{ rechazo.url_segura }}" target="_blank" title="Ver foto en pantalla completa">
-                                <img src="{{ rechazo.url_segura }}" alt="Evidencia daño">
-                            </a>
-                        {% else %}
-                            <span>Sin fotos</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td>
-                        No hay piezas registradas en este reporte.
-                    </td>
-
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
     </div>
 </div>
+{% endblock %}

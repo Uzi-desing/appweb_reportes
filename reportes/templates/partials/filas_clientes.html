@@ -1,30 +1,38 @@
 {% if clientes %}
     {% for cliente in clientes %}
-    <tr>
-        <td>{{ cliente.nombre | title }}</td>
-        <td>{{ cliente.telefono }}</td>
-        <td>{{ cliente.mail }}</td>
-        <td>{{ cliente.domicilio | title }}</td>
+    <tr class="border-b border-black/5 hover:bg-black/5 transition-colors cursor-pointer" data-url="#">
+        <td class="px-3 py-3 text-sm font-medium text-black">{{ cliente.nombre|title }}</td>
+        <td class="px-3 py-3 text-sm text-black/70">{{ cliente.telefono }}</td>
+        <td class="px-3 py-3 text-sm text-black">{{ cliente.mail }}</td>
+        <td class="px-3 py-3 text-sm text-black/70">{{ cliente.domicilio|title }}</td>
     </tr>
     {% endfor %}
 {% else %}
     <tr>
-        <td>No se encontraron clientes.</td>
+        <td colspan="4" class="px-3 py-8 text-center text-black/50">No se encontraron clientes.</td>
     </tr>
 {% endif %}
 
 {% if clientes.has_other_pages %}
-<tr>
-    <td>
-        {% if clientes.has_previous %}
-            <a href="?page={{ clientes.previous_page_number }}" class="btn-pagina">Anterior</a>
-        {% endif %}
-
-        <span>Página {{ clientes.number }} de {{ clientes.paginator.num_pages }}</span>
-
-        {% if clientes.has_next %}
-            <a href="?page={{ clientes.next_page_number }}" class="btn-pagina">Siguiente</a>
-        {% endif %}
+<tr class="fila-paginacion">
+    <td colspan="4" class="px-3 py-4">
+        <div class="flex items-center justify-between">
+            <div class="text-sm text-black/50">
+                {% if clientes.has_previous %}
+                    <a href="?page={{ clientes.previous_page_number }}" class="btn-pagina inline-flex items-center rounded-md border border-black px-3 py-1.5 text-sm font-medium text-black hover:bg-brand hover:border-brand hover:text-white transition-colors">
+                        Anterior
+                    </a>
+                {% endif %}
+            </div>
+            <span class="text-sm text-black/60">Página {{ clientes.number }} de {{ clientes.paginator.num_pages }}</span>
+            <div class="text-sm text-black/50">
+                {% if clientes.has_next %}
+                    <a href="?page={{ clientes.next_page_number }}" class="btn-pagina inline-flex items-center rounded-md border border-black px-3 py-1.5 text-sm font-medium text-black hover:bg-brand hover:border-brand hover:text-white transition-colors">
+                        Siguiente
+                    </a>
+                {% endif %}
+            </div>
+        </div>
     </td>
 </tr>
 {% endif %}

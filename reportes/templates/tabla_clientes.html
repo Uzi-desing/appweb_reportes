@@ -1,117 +1,46 @@
-<div class="contenedor-clientes">
-    <div>
-        <h2>Directorio de Clientes</h2>
-    </div>
+{% extends 'base.html' %}
+{% load static %}
 
-    <div class="filtros-busqueda">
-        <input type="text" id="buscador" placeholder="Buscar por Razon Social ..." class="form-control">
-        <button id="btnLimpiar">Limpiar Filtros</button>
-    </div>
+{% block title %}ECVA - Clientes{% endblock %}
 
-    <table>
-        <thead>
-            <tr>
-                <th class="sort-btn" data-sort="nombre">
-                    Razón Social <span id="sort-nombre">⇅</span>
-                </th>
-            </tr>
-        </thead>
-        <tbody id="tablaBody">
-            {% include 'partials/filas_clientes.html' %}
-        </tbody>
-    </table>
+{% block content %}
+<div class="w-full max-w-7xl mx-auto mt-8 px-4">
+    <h1 class="text-2xl font-semibold tracking-tight mb-6 text-black/90">
+        Directorio de Clientes
+    </h1>
+
+    <div class="p-6 rounded-lg border border-black/10 bg-white shadow-md">
+        <div class="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+            <input type="text" id="buscador" placeholder="Buscar por Razón Social ..." class="form-control w-full md:w-64">
+            <button id="btnLimpiar" class="inline-flex items-center justify-center rounded-md border border-black px-4 py-2 text-sm font-medium text-black hover:bg-brand hover:border-brand hover:text-white transition-colors whitespace-nowrap">
+                Limpiar
+            </button>
+            <a href="{% url 'registrar_cliente' %}" class="inline-flex items-center justify-center rounded-md border border-black px-6 py-2 text-sm font-medium text-black hover:bg-brand hover:border-brand hover:text-white transition-colors whitespace-nowrap">
+                Añadir Cliente
+            </a>
+        </div>
+
+        <div class="overflow-x-auto -mx-4 sm:mx-0">
+            <table class="w-full text-sm text-left border-collapse min-w-[600px]">
+                <thead class="bg-black/5 text-black/70 uppercase text-xs">
+                    <tr>
+                        <th class="px-3 py-3 border-b border-black/10 font-bold sort-btn cursor-pointer hover:bg-black/10" data-sort="nombre">
+                            Razón Social <span id="sort-nombre" class="ml-1">⇅</span>
+                        </th>
+                        <th class="px-3 py-3 border-b border-black/10 font-bold">Teléfono</th>
+                        <th class="px-3 py-3 border-b border-black/10 font-bold">Email</th>
+                        <th class="px-3 py-3 border-b border-black/10 font-bold">Domicilio</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaBody" class="divide-y divide-black/5">
+                    {% include 'partials/filas_clientes.html' %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const tablaBody = document.getElementById("tablaBody");
-    const buscador = document.getElementById("buscador");
-    const btnLimpiar = document.getElementById("btnLimpiar");
+{% endblock %}
 
-    let currentSort = 'nombre';
-    let currentOrder = 'asc';
-    let debounceTimer;
-
-    function cargarDatosAJAX(urlParams) {
-        urlParams.set('ajax', 'true');
-
-        fetch(`${window.location.pathname}?${urlParams.toString()}`)
-            .then(response => response.text())
-            .then(html => {
-                tablaBody.innerHTML = html;
-                rebindClickFilas();
-            })
-            .catch(error => console.error("Error cargando datos:", error));
-    }
-
-    function dispararBusqueda() {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            const params = new URLSearchParams();
-            if (buscador.value) params.set('q', buscador.value);
-            params.set('sort', currentSort);
-            params.set('orden', currentOrder); 
-            params.set('page', '1');
-            
-            cargarDatosAJAX(params);
-        }, 300);
-    }
-
-    buscador.addEventListener("input", dispararBusqueda);
-
-    btnLimpiar.addEventListener("click", () => {
-        buscador.value = "";
-        currentSort = 'nombre';
-        currentOrder = 'asc';
-        
-        // Reiniciar icono
-        document.getElementById('sort-nombre').innerText = '↑';
-        dispararBusqueda();
-    });
-
-    document.querySelectorAll('.sort-btn').forEach(th => {
-        th.addEventListener('click', function() {
-            const sortField = this.dataset.sort;
-            
-            // Alternar ascendente/descendente
-            currentOrder = (currentSort === sortField && currentOrder === 'asc') ? 'desc' : 'asc';
-            currentSort = sortField;
-            
-            // Actualizar flecha
-            this.querySelector('span').innerText = currentOrder === 'asc' ? '↑' : '↓';
-
-            dispararBusqueda();
-        });
-    });
-
-    tablaBody.addEventListener('click', function(e) {
-        if (e.target.classList.contains('btn-pagina')) {
-            e.preventDefault();
-            const url = new URL(e.target.href);
-            const params = new URLSearchParams(url.search);
-            
-            if (buscador.value) params.set('q', buscador.value);
-            params.set('sort', currentSort);
-            params.set('orden', currentOrder);
-            
-            cargarDatosAJAX(params);
-        }
-    });
-
-    function rebindClickFilas() {
-        const filas = tablaBody.querySelectorAll("tr:not(.fila-paginacion)");
-        filas.forEach(fila => {
-            if (fila.dataset.url && fila.dataset.url !== '#') {
-                fila.style.cursor = 'pointer';
-                fila.onclick = function(e) {
-                    if (e.target.closest('button') || e.target.closest('a')) return;
-                    window.location.href = this.dataset.url;
-                };
-            } else {
-                fila.style.cursor = 'default';
-            }
-        });
-    }
-    
-    rebindClickFilas();
-});
-</script>
+{% block extra_js %}
+<script src="{% static 'js/tabla_clientes.js' %}"></script>
+{% endblock %}

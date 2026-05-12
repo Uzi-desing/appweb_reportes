@@ -1,162 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
 
-<div class="contenedor-reportes">
-    <h2>Historial de Reportes</h2>
+{% block title %}ECVA - Reportes{% endblock %}
 
-    <div class="filtros-busqueda">
-        <input type="text" id="buscador" placeholder="Buscar ID, remito o cliente ..." class="form-control">
-        <select id="filtroEmpleado" class="form-control">
-            <option value="">Empleados</option>
-            {% for emp in empleados %}
-                <option value="{{ emp.id }}">{{ emp.nombre }} {{ emp.apellido }}</option>
-            {% endfor %}
-        </select>
-        <input type="date" id="fechaDesde" class="form-control">
-        <input type="date" id="fechaHasta" class="form-control">
-        <button id="btnLimpiar">Limpiar Filtros</button>
+{% block content %}
+<div class="w-full max-w-7xl mx-auto mt-8 px-4">
+    <h1 class="text-2xl font-semibold tracking-tight mb-6 text-black/90">
+        Historial de Reportes
+    </h1>
+
+    <div class="p-6 rounded-lg border border-black/10 bg-white shadow-md">
+        <div class="flex flex-col md:flex-row gap-4 mb-6">
+            <input type="text" id="buscador" placeholder="Buscar ID, remito o cliente ..." class="form-control md:w-[500px]">
+            <select id="filtroEmpleado" class="form-control md:w-48">
+                <option value="">Todos los empleados</option>
+                {% for emp in empleados %}
+                    <option value="{{ emp.id }}">{{ emp.nombre|title }} {{ emp.apellido|title }}</option>
+                {% endfor %}
+            </select>
+            <input type="date" id="fechaDesde" class="form-control md:w-40" placeholder="Desde">
+            <input type="date" id="fechaHasta" class="form-control md:w-40" placeholder="Hasta">
+            <button id="btnLimpiar" class="inline-flex items-center justify-center rounded-md border border-black px-4 py-2 text-sm font-medium text-black hover:bg-brand hover:border-brand hover:text-white transition-colors">
+                Limpiar
+            </button>
+        </div>
+
+        <div class="overflow-x-auto -mx-4 sm:mx-0">
+            <table class="w-full text-sm text-left border-collapse">
+                <thead class="bg-black/5 text-black/70 uppercase text-xs">
+                    <tr>
+                        <th class="px-3 py-3 border-b border-black/10 font-bold sort-btn cursor-pointer hover:bg-black/10" data-sort="id">
+                            N° <span id="sort-id" class="ml-1">↓</span>
+                        </th>
+                        <th class="px-3 py-3 border-b border-black/10 font-bold sort-btn cursor-pointer hover:bg-black/10" data-sort="remito_recepcion">
+                            Remito <span id="sort-remito_recepcion" class="ml-1">⇅</span>
+                        </th>
+                        <th class="px-3 py-3 border-b border-black/10 font-bold">
+                            Fecha
+                        </th>
+                        <th class="px-3 py-3 border-b border-black/10 font-bold sort-btn cursor-pointer hover:bg-black/10" data-sort="cliente__nombre">
+                            Cliente <span id="sort-cliente__nombre" class="ml-1">⇅</span>
+                        </th>
+                        <th class="px-3 py-3 border-b border-black/10 font-bold sort-btn cursor-pointer hover:bg-black/10" data-sort="empleado__nombre">
+                            Empleado <span id="sort-empleado__nombre" class="ml-1">⇅</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="tablaBody" class="divide-y divide-black/5">
+                    {% include 'partials/filas_reportes.html' %}
+                </tbody>
+            </table>
+        </div>
     </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th class="sort-btn" data-sort="id">
-                    N° <span id="sort-id">↓</span>
-                </th>
-                <th class="sort-btn" data-sort="remito_recepcion">
-                    Remito <span id="sort-remito_recepcion">⇅</span>
-                </th>
-                <th>
-                    Fecha
-                </th>
-                <th class="sort-btn" data-sort="cliente__nombre">
-                    Cliente <span id="sort-cliente__nombre">⇅</span>
-                </th>
-                <th class="sort-btn" data-sort="empleado__nombre">
-                    Empleado <span id="sort-empleado__nombre">⇅</span>
-                </th>
-            </tr>
-        </thead>
-        <tbody id="tablaBody">
-            {% include 'partials/filas_reportes.html' %}
-        </tbody>
-    </table>
 </div>
+{% endblock %}
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const tablaBody = document.getElementById("tablaBody");
-    const buscador = document.getElementById("buscador");
-    const fechaDesde = document.getElementById("fechaDesde");
-    const fechaHasta = document.getElementById("fechaHasta");
-    const filtroEmpleado = document.getElementById("filtroEmpleado");
-    const btnLimpiar = document.getElementById("btnLimpiar");
-
-    let currentSort = 'id';
-    let currentOrder = 'desc';
-    let debounceTimer;
-
-    function cargarDatosAJAX(urlParams) {
-        urlParams.set('ajax', 'true'); // Indica al servidor que solo devuelva el partial HTML.
-        
-        fetch(`${window.location.pathname}?${urlParams.toString()}`)
-            .then(response => response.text())
-            .then(html => {
-                tablaBody.innerHTML = html;
-                rebindClickFilas();
-            })
-            .catch(error => console.error("Error cargando datos:", error));
-    }
-
-    // Recopila todos los filtros actuales y dispara la carga de datos.
-    function dispararBusqueda() {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            const params = new URLSearchParams();
-            // Agregamos filtros solo si tienen valor.
-            if (buscador.value) params.set('q', buscador.value);
-            if (fechaDesde.value) params.set('desde', fechaDesde.value);
-            if (fechaHasta.value) params.set('hasta', fechaHasta.value);
-            if (filtroEmpleado.value) params.set('empleado', filtroEmpleado.value);
-            // Parametros de orden y paginación
-            params.set('sort', currentSort);
-            params.set('order', currentOrder);
-            params.set('page', '1'); // Al filtrar, siempre se vuelve a la página 1.
-            
-            cargarDatosAJAX(params);
-        }, 300); // Espera 300ms despues que el usuario deje de escribir.
-    }
-
-    // --- Listeners de Eventos para Filtros ---
-    buscador.addEventListener("input", dispararBusqueda);
-    filtroEmpleado.addEventListener("change", dispararBusqueda);
-    fechaDesde.addEventListener("change", dispararBusqueda);
-    fechaHasta.addEventListener("change", dispararBusqueda);
-
-    // Resetea todos los campo de filtro a su estado original.
-    btnLimpiar.addEventListener("click", () => {
-        buscador.value = "";
-        filtroEmpleado.value = "";
-        fechaDesde.value = "";
-        fechaHasta.value = "";
-        currentSort = 'id';
-        currentOrder = 'desc';
-        // Resetea visualmente las flechas de cabeceras de ordenamiento Asc y Desc.
-        document.querySelectorAll('[id^="sort-"]').forEach(span => span.innerText = '⇅');
-        document.getElementById('sort-id').innerText = '↓';
-        dispararBusqueda();
-    });
-
-    // Manejo del 'clic' en las cabeceras de ordenamiento Asc y Desc.
-    document.querySelectorAll('.sort-btn').forEach(th => {
-        th.addEventListener('click', function() {
-            const sortField = this.dataset.sort;
-            // Si hace clic en el mismo campo, alterna el orden.
-            currentOrder = (currentSort === sortField && currentOrder === 'desc') ? 'asc' : 'desc';
-            currentSort = sortField;
-            // Actualiza los iconos de las flechas en base a su orden actual.
-            document.querySelectorAll('[id^="sort-"]').forEach(span => span.innerText = '⇅');
-            this.querySelector('span').innerText = currentOrder === 'desc' ? '↓' : '↑';
-
-            dispararBusqueda();
-        });
-    });
-
-    // Delegación de eventos para la paginación.
-    tablaBody.addEventListener('click', function(e) {
-        if (e.target.classList.contains('btn-pagina')) {
-            e.preventDefault();
-            const url = new URL(e.target.href);
-            const params = new URLSearchParams(url.search);
-            
-            if (buscador.value) params.set('q', buscador.value);
-            if (filtroEmpleado.value) params.set('empleado', filtroEmpleado.value);
-            if (fechaDesde.value) params.set('desde', fechaDesde.value);
-            if (fechaHasta.value) params.set('hasta', fechaHasta.value);
-            params.set('sort', currentSort);
-            params.set('orden', currentOrder);
-            
-            cargarDatosAJAX(params);
-        }
-    });
-
-    // Funcionalidad para clic en filas (Redirección al detalle de un reporte especifico).
-    function rebindClickFilas() {
-        const filas = tablaBody.querySelectorAll("tr:not(.fila-paginacion)");
-        // Verificacion si la fila cuenta con la URL guardada en su data-url.
-        filas.forEach(fila => {
-            if (fila.dataset.url) {
-                fila.style.cursor = 'pointer';
-                fila.onclick = function(e) {
-                    // Protección: Si el clic se hace en un botón o enlace dentro de la fila, no se redirige.
-                    if (e.target.closest('button') || e.target.closest('a')) {
-                        return;
-                    }
-
-                    window.location.href = this.dataset.url;
-                };
-            }
-        });
-    }
-    
-    rebindClickFilas();
-});
-</script>
+{% block extra_js %}
+<script src="{% static 'js/tabla_reportes.js' %}"></script>
+{% endblock %}

@@ -1,5 +1,6 @@
 .git
 .env
+.env.*
 .vscode
 tests/
 test/
@@ -7,3 +8,8 @@ docs/
 *.log
 postgres_data/
 media/
+node_modules/
+__pycache__/
+*.pyc
+venv/
+*.md

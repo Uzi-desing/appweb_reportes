@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* Estilos para inputs del formulario */
+  input.form-control,
+  select.form-control,
+  textarea.form-control {
+    @apply w-full rounded-lg border border-black/20 bg-white px-3 py-2 text-sm text-black outline-none transition-colors duration-150;
+  }
+  
+  input.form-control:focus,
+  select.form-control:focus,
+  textarea.form-control:focus {
+    @apply border-brand ring-2 ring-brand/10;
+  }
+
+  select.form-control {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23888' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  .django-inputs select,
+  .django-inputs input[type="number"],
+  .django-inputs textarea {
+    @apply w-full rounded-lg border border-[#d6d4ce] bg-[#f4f4f2] px-3 py-2.5 text-[16px] text-[#1a1a1a] outline-none transition-colors duration-150;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  
+  .django-inputs select:focus,
+  .django-inputs input[type="number"]:focus,
+  .django-inputs textarea:focus {
+    @apply border-[#c0392b] bg-white ring-2 ring-[#c0392b]/10 ring-offset-0;
+  }
+  
+  .django-inputs select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23888' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+  
+  .django-inputs textarea { 
+    resize: vertical; 
+    min-height: 46px; 
+  }
+
+  .pz-foto-area input[type="file"] {
+    @apply absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10;
+  }
+
+  .input-error { 
+    @apply border-[#e74c3c] !important; 
+  }
+
+  /* Tablas responsivas */
+  .tabla-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .tabla-responsive table {
+    min-width: 600px;
+  }
+  
+  .tabla-responsive th,
+  .tabla-responsive td {
+    white-space: nowrap;
+  }
+}

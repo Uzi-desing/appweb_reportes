@@ -1,0 +1,51 @@
+<div class="form-row flex flex-col overflow-hidden rounded-xl border border-black/10 bg-white shadow-sm relative transition-all" data-index="{{ prefix }}">
+  <div class="hidden">{{ form.id }}{{ form.DELETE }}</div>
+
+  <div class="flex items-center gap-3 bg-gray-800 px-4 py-3">
+    <span class="pz-card-num flex-1 text-sm font-semibold text-white">
+      Pieza #{{ counter }}
+    </span>
+    <span class="pz-card-status rounded-md px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold bg-gray-600 text-gray-300">Incompleto</span>
+    <button type="button" class="remove-row flex items-center p-1 text-red-400 transition-colors hover:text-red-500" aria-label="Eliminar pieza">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    </button>
+  </div>
+
+  <div class="flex flex-col gap-4 p-4 md:p-5 bg-white">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="flex flex-col gap-1.5 relative js-field-container">
+        <label class="text-xs font-bold uppercase tracking-wider text-black/50">{{ form.pieza.label|default:"Pieza" }}</label>
+        {{ form.pieza }}
+      </div>
+      <div class="flex flex-col gap-1.5 relative js-field-container">
+        <label class="text-xs font-bold uppercase tracking-wider text-black/50">{{ form.categoria_dano.label|default:"Categoría Daño" }}</label>
+        {{ form.categoria_dano }}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="flex flex-col gap-1.5 relative js-field-container">
+        <label class="text-xs font-bold uppercase tracking-wider text-black/50">Cantidad</label>
+        {{ form.cantidad }}
+      </div>
+      <div class="flex flex-col gap-1.5 relative js-field-container">
+        <label class="text-xs font-bold uppercase tracking-wider text-black/50">{{ form.observaciones.label|default:"Observaciones" }}</label>
+        {{ form.observaciones }}
+      </div>
+    </div>
+
+    <div class="col-span-full flex flex-col gap-1.5 relative js-field-container mt-1">
+      <label class="text-xs font-bold uppercase tracking-wider text-black/50">Foto de la evidencia</label>
+      <div class="pz-foto-area relative flex cursor-pointer items-center gap-3.5 rounded-lg border-2 border-dashed border-black/20 bg-gray-50 px-4 py-3.5 transition-colors hover:border-brand hover:bg-white">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-red-50 text-brand">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <div class="flex flex-col flex-1 truncate">
+          <strong class="pz-foto-name text-sm font-bold text-black truncate">Subir fotografía</strong>
+          <span class="pz-foto-hint text-xs text-black/50">Se comprimirá automáticamente</span>
+        </div>
+        {{ form.imagen }}
+      </div>
+    </div>
+  </div>
+</div>

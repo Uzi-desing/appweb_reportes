@@ -1,40 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión</title>
-</head>
-<body>
-    <h1>Iniciar Sesión</h1>
+{% extends 'base.html' %}
+{% load static %}
 
-    <form method="post">
-        {% csrf_token %}
-        
-        {% if loginForm.non_field_errors %}
-                {% for error in loginForm.non_field_errors %}
-                    <p>{{ error }}</p>
-                {% endfor %}
-        {% endif %}
+{% block title %}ECVA - Iniciar Sesión{% endblock %}
 
-            <label for="{{ loginForm.username.id_for_label }}">Usuario</label>
-            {{ loginForm.username }}
-            {% if loginForm.username.errors %}
-                    {% for error in loginForm.username.errors %}
-                        <span>{{ error }}</span>
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    }
+    .login-container {
+        animation: fadeIn 0.5s ease-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-200px)] flex items-center justify-center px-4">
+    <div class="login-container w-full max-w-md bg-white rounded-2xl shadow-xl border border-black/10 overflow-hidden">
+        <div class="bg-brand px-6 py-8 text-center">
+            <img src="{% static 'images/logo.png' %}" alt="Logo ECVA" class="h-16 w-auto mx-auto mb-3">
+            <h1 class="text-white text-xl font-bold tracking-tight">ECVA - Sistema de Reportes</h1>
+            <p class="text-white/80 text-sm mt-1">Control de Calidad</p>
+        </div>
+
+        <div class="p-6 sm:p-8">
+            <h2 class="text-xl font-semibold text-black/90 mb-6 text-center">Iniciar Sesión</h2>
+
+            <form method="POST" class="space-y-5">
+                {% csrf_token %}
+
+                {% if loginForm.non_field_errors %}
+                <div class="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-sm">
+                    {% for error in loginForm.non_field_errors %}
+                        <p>{{ error }}</p>
                     {% endfor %}
-            {% endif %}
+                </div>
+                {% endif %}
 
-            
-            <label for="{{ loginForm.password.id_for_label }}">Contraseña</label>
-            {{ loginForm.password }}
-            {% if loginForm.password.errors %}
-                    {% for error in loginForm.password.errors %}
-                        <span>{{ error }}</span>
-                    {% endfor %}
-            {% endif %}
+                <div class="space-y-1.5">
+                    <label for="{{ loginForm.username.id_for_label }}" class="block text-sm font-medium text-black/80">Usuario</label>
+                    <input type="text" name="{{ loginForm.username.name }}" id="{{ loginForm.username.id_for_label }}" class="form-control w-full" placeholder="Ingrese su usuario" autocomplete="username" required>
+                    {% if loginForm.username.errors %}
+                    <p class="text-brand text-xs mt-1">{% for error in loginForm.username.errors %}{{ error }}{% endfor %}</p>
+                    {% endif %}
+                </div>
 
-        <button type="submit">Iniciar Sesión</button>
-    </form>
-</body>
-</html>
+                <div class="space-y-1.5">
+                    <label for="{{ loginForm.password.id_for_label }}" class="block text-sm font-medium text-black/80">Contraseña</label>
+                    <input type="password" name="{{ loginForm.password.name }}" id="{{ loginForm.password.id_for_label }}" class="form-control w-full" placeholder="Ingrese su contraseña" autocomplete="current-password" required>
+                    {% if loginForm.password.errors %}
+                    <p class="text-brand text-xs mt-1">{% for error in loginForm.password.errors %}{{ error }}{% endfor %}</p>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="w-full bg-brand hover:bg-red-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md">
+                    Iniciar Sesión
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-gray-50 px-6 py-4 text-center border-t border-black/10">
+            <span class="text-xs text-black/50">ECVA SRL - Sistema Interno</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
