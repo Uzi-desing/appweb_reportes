@@ -5,28 +5,42 @@ from io import BytesIO
 from django.core.files.base import ContentFile
 import uuid
 
-# Integración con Azure Blob Storage
 from .storage_backend import AzureMediaStorage
 from .utils.utils_azure import generate_url_sas
 
-# Create your models here.
+
 class Categoria(models.Model):
     descripcion = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name = 'Categoría de Material'
+        verbose_name_plural = 'Categorías de Material'
 
     def __str__(self):
         return self.descripcion
 
+
 class CategoriaDano(models.Model):
     motivo = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = 'Tipo de Daño'
+        verbose_name_plural = 'Tipos de Daño'
 
     def __str__(self):
         return self.motivo
 
+
 class Rol(models.Model):
     puesto = models.CharField(max_length=255)
 
+    class Meta:
+        verbose_name = 'Rol de Usuario'
+        verbose_name_plural = 'Roles de Usuario'
+
     def __str__(self):
         return self.puesto
+
 
 class Empleado(models.Model):
     rol = models.ForeignKey(Rol, on_delete=models.CASCADE)
@@ -36,8 +50,13 @@ class Empleado(models.Model):
     telefono = models.CharField(max_length=20)
     mail = models.EmailField(unique=True)
 
+    class Meta:
+        verbose_name = 'Empleado'
+        verbose_name_plural = 'Empleados'
+
     def __str__(self):
         return f"{self.nombre} {self.apellido} - {self.rol.puesto}"
+
 
 class Cliente(models.Model):
     nombre = models.CharField(max_length=255)
@@ -45,8 +64,13 @@ class Cliente(models.Model):
     mail = models.EmailField(unique=True)
     domicilio = models.CharField(max_length=255)
 
+    class Meta:
+        verbose_name = 'Cliente'
+        verbose_name_plural = 'Clientes'
+
     def __str__(self):
         return self.nombre
+
 
 class UsuarioTransportista(models.Model):
     OPCIONES_TRANSPORTE = [
@@ -63,15 +87,25 @@ class UsuarioTransportista(models.Model):
     patente = models.CharField(max_length=20)
     transporte = models.CharField(max_length=20, choices=OPCIONES_TRANSPORTE, default='CAMION')
 
+    class Meta:
+        verbose_name = 'Transportista'
+        verbose_name_plural = 'Transportistas'
+
     def __str__(self):
         return f"{self.nombre} {self.apellido} - ({self.patente})"
+
 
 class Pieza(models.Model):
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
     medidas = models.CharField(max_length=100)
 
+    class Meta:
+        verbose_name = 'Pieza'
+        verbose_name_plural = 'Piezas'
+
     def __str__(self):
         return f"{self.categoria.descripcion} - {self.medidas}"
+
 
 class ReporteDano(models.Model):
     empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE)
@@ -82,10 +116,13 @@ class ReporteDano(models.Model):
     patente_reporte = models.CharField(max_length=20)
     finalizado = models.BooleanField(default=False)
 
+    class Meta:
+        verbose_name = 'Reporte de Daño'
+        verbose_name_plural = 'Reportes de Daño'
+
     def save(self, *args, **kwargs):
         if not self.remito_recepcion:
-            # Genera una cadena única de 32 caracteres, toma los primeros 8 caracteres y los convierte a mayúsculas
-            nuevo_remito = uuid.uuid4().hex[:8].upper() # Ejemplo: 4F2D8A1B
+            nuevo_remito = uuid.uuid4().hex[:8].upper()
             self.remito_recepcion = nuevo_remito
 
         if not self.patente_reporte and self.transportista:
@@ -110,6 +147,10 @@ class PiezaRechazada(models.Model):
         blank=True,
         null=True
     )
+
+    class Meta:
+        verbose_name = 'Pieza Rechazada'
+        verbose_name_plural = 'Piezas Rechazadas'
 
     @property
     def url_segura(self):
