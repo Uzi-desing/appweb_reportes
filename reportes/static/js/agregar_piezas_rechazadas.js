@@ -200,6 +200,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Validación pre-envío
     form.addEventListener('submit', function(e) {
+        const submitBtn = document.getElementById('btn-submit-reporte');
+        if (submitBtn && !submitBtn.disabled) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+            submitBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                Procesando...
+            `;
+        }
+
         let isInvalid = false;
         const visibleRows = container.querySelectorAll('.form-row:not(.hidden)');
 
