@@ -13,7 +13,7 @@ load_dotenv()
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = ['*',]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [
     'unfold',
@@ -78,6 +78,21 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+# --- Seguridad HTTPS ---
+SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True'
+SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', 31536000)) # 1 Año
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# --- Cookies seguras ---
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'True') == 'True'
+CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'True') == 'True'
+
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
@@ -105,6 +120,20 @@ Q_CLUSTER = {
     'orm': 'default'
 }
 
+# --- Rate Limiting para Login (django-axes) ---
+AXES_FAILURE_LIMIT = 5
+AXES_LOCK_OUT_AT_FAILURE = True
+AXES_COOLOFF_TIME = 0.5
+AXES_ONLY_LOGIN_FAILURES = True
+AXES_IP_WHITELIST = ['127.0.0.1', '::1']
+AXES_LOCKOUT_TEMPLATE = 'locked.html'
+
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# --- Estilo del admin site con Unfold ---
 UNFOLD = {
     "SITE_TITLE": "ECVA Reportes",
     "SITE_HEADER": "Sistema de Gestión ECVA",
@@ -223,16 +252,3 @@ UNFOLD = {
         ],
     },
 }
-
-# --- Rate Limiting para Login (django-axes) ---
-AXES_FAILURE_LIMIT = 5
-AXES_LOCK_OUT_AT_FAILURE = True
-AXES_COOLOFF_TIME = 0.5
-AXES_ONLY_LOGIN_FAILURES = True
-AXES_IP_WHITELIST = ['127.0.0.1', '::1']
-AXES_LOCKOUT_TEMPLATE = 'locked.html'
-
-AUTHENTICATION_BACKENDS = [
-    'axes.backends.AxesBackend',
-    'django.contrib.auth.backends.ModelBackend',
-]
