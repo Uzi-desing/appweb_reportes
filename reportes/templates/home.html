@@ -104,5 +104,79 @@
             </form>
         </div>
     </div>
+
+    <!-- Estadísticas -->
+    <div class="mt-8">
+        <h2 class="text-2xl font-semibold tracking-tight mb-6 text-black/90">
+            Estadísticas
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Último Reporte -->
+            <div class="p-6 rounded-lg border border-black/10 bg-white shadow-md">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p class="text-base font-bold text-black/80">Último Reporte</p>
+                </div>
+                {% if ultimo_reporte %}
+                    <p class="text-3xl font-bold text-brand mb-3">
+                        N°{{ ultimo_reporte.id }}
+                    </p>
+                    <div class="space-y-1 text-sm text-black/70">
+                        <p><span class="text-black/50">Remito:</span> {{ ultimo_reporte.remito_recepcion }}</p>
+                        <p><span class="text-black/50">Cliente:</span> {{ ultimo_reporte.cliente.nombre|title }}</p>
+                        <p><span class="text-black/50">Empleado:</span> {{ ultimo_reporte.empleado.nombre|title }} {{ ultimo_reporte.empleado.apellido|title }}</p>
+                        <p><span class="text-black/50">Conductor:</span> {{ ultimo_reporte.transportista.nombre|title }} {{ ultimo_reporte.transportista.apellido|title }}</p>
+                    </div>
+                    <a href="{% url 'detalle_reporte' ultimo_reporte.id %}" 
+                       class="mt-4 inline-flex items-center rounded-md border border-black px-3 py-2 text-sm font-medium text-black hover:bg-brand hover:border-brand hover:text-white transition-colors">
+                        Ver detalles
+                    </a>
+                {% else %}
+                    <p class="text-3xl font-bold text-black/30 mb-3">—</p>
+                    <p class="text-sm text-black/50">No hay reportes aún</p>
+                {% endif %}
+            </div>
+
+            <!-- Total Piezas Rechazadas -->
+            <div class="p-6 rounded-lg border border-black/10 bg-white shadow-md">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <p class="text-base font-bold text-black/80">Total Piezas Rechazadas</p>
+                </div>
+                <p class="text-4xl font-bold text-brand mb-3">
+                    {{ total_piezas|default:0 }}
+                </p>
+                <p class="text-sm text-black/50">
+                    en todo el sistema
+                </p>
+            </div>
+
+            <!-- Cliente con más reportes -->
+            <div class="p-6 rounded-lg border border-black/10 bg-white shadow-md">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <p class="text-base font-bold text-black/80">Cliente con Más Reportes</p>
+                </div>
+                {% if cliente_top %}
+                    <p class="text-3xl font-bold text-brand mb-3">
+                        {{ cliente_top.nombre|title }}
+                    </p>
+                    <p class="text-sm text-black/50">
+                        {{ cliente_top.num_reportes }} reportes registrados
+                    </p>
+                {% else %}
+                    <p class="text-3xl font-bold text-black/30 mb-3">—</p>
+                    <p class="text-sm text-black/50">No hay clientes aún</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

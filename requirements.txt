@@ -8,6 +8,7 @@ cryptography==46.0.7
 Django==6.0.4
 django-picklefield==3.4.0
 django-q2==1.10.0
+dj-database-url>=2.1.0
 django-storages==1.14.6
 django-unfold==0.92.0
 django-axes==6.1.0
@@ -24,3 +25,4 @@ requests==2.33.1
 sqlparse==0.5.5
 typing_extensions==4.15.0
 urllib3==2.6.3
+whitenoise>=6.0.0

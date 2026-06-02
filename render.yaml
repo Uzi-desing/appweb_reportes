@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: reportes
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    region: oregon
+    healthCheckPath: /health/
+    envVars:
+      - fromDatabase:
+          name: ecva-db
+          color: red
+        key: DATABASE_URL
+      - key: ALLOWED_HOSTS
+        value: reportes.onrender.com
+      - key: SECRET_KEY
+        generateValue: true
+      - key: USE_SQLITE
+        value: false
+      - key: SECURE_SSL_REDIRECT
+        value: true
+
+  - type: worker
+    name: reportes-worker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    region: oregon
+    numInstances: 1
+    startCommand: python manage.py qcluster
+    envVars:
+      - fromDatabase:
+          name: ecva-db
+          color: red
+        key: DATABASE_URL
+      - key: SECRET_KEY
+        generateValue: true
+      - key: USE_SQLITE
+        value: false

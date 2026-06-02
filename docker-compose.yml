@@ -12,7 +12,7 @@ services:
 
   web:
     build: .
-    command: sh -c "python manage.py qcluster & python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
     ports:

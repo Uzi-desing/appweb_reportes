@@ -122,8 +122,11 @@ class ReporteDano(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.remito_recepcion:
-            nuevo_remito = uuid.uuid4().hex[:8].upper()
-            self.remito_recepcion = nuevo_remito
+            while True:
+                nuevo_remito = uuid.uuid4().hex[:12].upper()
+                if not ReporteDano.objects.filter(remito_recepcion=nuevo_remito).exists():
+                    self.remito_recepcion = nuevo_remito
+                    break
 
         if not self.patente_reporte and self.transportista:
             self.patente_reporte = self.transportista.patente
@@ -159,7 +162,17 @@ class PiezaRechazada(models.Model):
         return None
 
     def save(self, *args, **kwargs):
-        if self.imagen:
+        procesar = bool(self.imagen and (self.pk is None))
+
+        if self.pk and self.imagen:
+            try:
+                original = PiezaRechazada.objects.get(pk=self.pk)
+                if original.imagen.name != self.imagen.name:
+                    procesar = True
+            except PiezaRechazada.DoesNotExist:
+                procesar = True
+
+        if procesar:
             img = Image.open(self.imagen)
             if img.mode != 'RGB':
                 img = img.convert('RGB')

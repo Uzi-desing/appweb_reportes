@@ -1,13 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, authenticate
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
-from django.db import transaction, IntegrityError
+from django.db import transaction, IntegrityError, DatabaseError
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Count, Sum
 from django.core.paginator import Paginator
+from django.utils.http import url_has_allowed_host_and_scheme
 from .utils.utils_pdf import GeneradorReportePDF
 from django_q.tasks import async_task
 from .models import UsuarioTransportista, ReporteDano, Empleado, Cliente, Rol, PiezaRechazada
@@ -25,9 +26,10 @@ def login_view(request):
         if form.is_valid():
             login(request, form.get_user()) # Inicia sesión al usuario autenticado
            
-           # Esto sirve para devolver al usuario a la página que intentaba ver antes del login
             next_url = request.GET.get('next') or request.POST.get('next')
-            return redirect(next_url if next_url else 'home')
+            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                return redirect(next_url)
+            return redirect('home')
     else:
         form = FlexibleLoginForm()
 
@@ -37,13 +39,39 @@ def login_view(request):
 @require_http_methods(["GET"])
 @login_required(login_url='login')
 def home_view(request):
-    return render(request, 'home.html')
+    ultimo_reporte = ReporteDano.objects.select_related(
+        'cliente', 'empleado', 'transportista'
+    ).order_by('-id').first()
+    
+    total_piezas = PiezaRechazada.objects.aggregate(total=Sum('cantidad'))['total'] or 0
+    
+    cliente_top = Cliente.objects.annotate(
+        num_reportes=Count('reportedano')
+    ).order_by('-num_reportes').first()
+    
+    context = {
+        'ultimo_reporte': ultimo_reporte,
+        'total_piezas': total_piezas,
+        'cliente_top': cliente_top,
+    }
+    
+    return render(request, 'home.html', context)
 
+@never_cache
 @require_http_methods(["POST"])
 def logout_view(request):
     logout(request)
-    return redirect('login')
+    response = redirect('login')
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
 
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['X-Frame-Options'] = 'DENY'
+
+    return response
+
+@never_cache
 @login_required(login_url='login')
 @require_http_methods(["GET", "POST"])
 def crear_reporte_view(request):
@@ -83,6 +111,9 @@ def crear_reporte_view(request):
 
                     return redirect ('agregar_piezas', reporte_id=reporte.id)
             
+            except (IntegrityError, DatabaseError) as e:
+                messages.error(request, 'Error de base de datos al guardar el reporte.')
+                print(f"Error DB en crear_reporte: {e}")
             except Exception as e:
                 messages.error(request, 'Error técnico al guardar.')
                 print(f"Error en crear_reporte: {e}")
@@ -119,6 +150,8 @@ def agregar_piezas_rechazadas_view(request, reporte_id):
                     messages.success(request, f"Reporte finalizado. En unos momentos se enviará el PDF al correo {reporte.cliente.mail}.")
                 return redirect('detalle_reporte', reporte_id=reporte.id)
            
+           except (IntegrityError, DatabaseError) as e:
+                messages.error(request, "Error de base de datos al guardar el reporte. Por favor, reintente.")
            except Exception as e:
                 messages.error(request, "Error al guardar el reporte. Por favor, reintente.")
         else:
@@ -131,6 +164,7 @@ def agregar_piezas_rechazadas_view(request, reporte_id):
         'reporte': reporte
     })
 
+@never_cache
 @login_required(login_url='login')
 @require_http_methods(['GET'])
 def tabla_reportes_view(request):
@@ -183,6 +217,7 @@ def tabla_reportes_view(request):
 
     return render(request, 'tabla_reportes.html', context)
     
+@never_cache
 @login_required(login_url='login')
 @require_http_methods(['GET'])
 def detalle_reporte_view(request, reporte_id):
@@ -193,6 +228,7 @@ def detalle_reporte_view(request, reporte_id):
 
     return render(request, 'detalle_reporte.html', {'reporte': reporte})
 
+@never_cache
 @login_required(login_url='login')
 @require_http_methods(['GET', 'POST'])
 def registrar_cliente_view(request):
@@ -205,6 +241,8 @@ def registrar_cliente_view(request):
                 return redirect('home')
             except IntegrityError:
                 messages.error(request, "Error interno: Ya existe un registro con esos datos únicos.")
+            except DatabaseError as e:
+                messages.error(request, "Error de base de datos al guardar el cliente. Intente nuevamente.")
             except Exception as e:
                 messages.error(request, "Ocurrió un error inesperado al intentar guardar el cliente. Intente nuevamente.")
         else:
@@ -213,6 +251,7 @@ def registrar_cliente_view(request):
         form = ClienteForm()
     return render(request, 'registrar_cliente.html', {'form': form})
 
+@never_cache
 @login_required(login_url='login')
 @require_http_methods(['GET'])
 def tabla_clientes_view(request):
@@ -239,6 +278,7 @@ def tabla_clientes_view(request):
     
     return render(request, 'tabla_clientes.html', {'clientes': page_obj})
 
+@never_cache
 @login_required(login_url='login')
 @require_http_methods(['GET'])
 def tabla_empleados_view(request):
@@ -272,6 +312,7 @@ def tabla_empleados_view(request):
     
     return render(request, 'tabla_empleados.html', {'empleados': page_obj, 'roles': roles})
 
+@never_cache
 @login_required(login_url='login')
 @require_http_methods(['GET'])
 def generar_reporte_pdf_view(request, reporte_id):
@@ -292,4 +333,4 @@ def generar_reporte_pdf_view(request, reporte_id):
     except Exception as e:
         print(f"Error generando PDF {reporte_id}: {e}")
         messages.error(request, "Ocurrió un error al generar el documento PDF.")
-        return redirect('deta')
+        return redirect('detalle_reporte', reporte_id=reporte.id)
